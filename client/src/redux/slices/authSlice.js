@@ -7,7 +7,7 @@ const userFromStorage = null;
 const initialState = {
   user: userFromStorage,
   isAuthenticated: !!userFromStorage,
-  loading: false,
+  loading: true, // Start in loading state to prevent flash of login redirect
   error: null,
 };
 
@@ -181,13 +181,18 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
       // Load User
+      .addCase(loadUser.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(loadUser.fulfilled, (state, action) => {
+        state.loading = false;
         if (action.payload) {
           state.user = action.payload;
           state.isAuthenticated = true;
         }
       })
       .addCase(loadUser.rejected, (state) => {
+        state.loading = false;
         state.user = null;
         state.isAuthenticated = false;
       })
