@@ -323,9 +323,14 @@ const Contact = () => {
               <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-gold-light mb-2">
                 Send us a Message
               </h2>
-              <p className="text-gray-600 dark:text-primary-300 mb-6">
-                Fill out the form below and we'll get back to you shortly.
-              </p>
+              <div className="mb-6 p-3 bg-amber-50 border-l-4 border-primary-500 rounded-r-lg">
+                <p className="text-xs italic text-amber-800 dark:text-amber-900 font-medium">
+                  To serve you faster, please jump straight to your question.
+                  Avoid general greetings like "Hello" or "Good morning" as
+                  standalone messages. Clear, direct questions receive priority
+                  responses.
+                </p>
+              </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
