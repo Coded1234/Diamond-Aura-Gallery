@@ -386,57 +386,51 @@ async function getYangoShippingRate(origin, destination, deliveryInfo) {
       destination.longitude,
     );
 
-    // Yango API request for delivery cost estimate
+    // Yango Integration V2 Tariffs API request for delivery cost estimate
     const requestData = {
-      client_id: YANGO_CLIENT_ID,
+      client_requirements: {
+        taxi_class: "express",
+      },
       route_points: [
         {
           coordinates: [origin.longitude, origin.latitude],
-          fullname: "Store",
         },
         {
           coordinates: [destination.longitude, destination.latitude],
-          fullname: deliveryInfo.address,
-          phone: deliveryInfo.phone || "+233000000000",
         },
       ],
-      items: [
-        {
-          quantity: 1,
-          size: { length: 0.3, width: 0.3, height: 0.2 }, // Default package size
-          weight: 2, // Default weight in kg
-        },
-      ],
-      requirements: {
-        taxi_class: "express",
-      },
     };
 
+    // Replace old /v1/offers/calculate with /integration/v2/tariffs
+    // In case YANGO_API_URL includes /api/b2b, we'll strip it or just use the base URL if needed,
+    // but typically we can append it directly if it's correct.
     const response = await axios.post(
-      `${YANGO_API_URL}/v1/offers/calculate`,
+      `${YANGO_API_URL.replace("/api/b2b", "")}/integration/v2/tariffs`,
       requestData,
       {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${YANGO_API_KEY}`,
+          "Accept-Language": "en",
         },
         timeout: 10000,
       },
     );
 
-    if (
-      response.data &&
-      response.data.offers &&
-      response.data.offers.length > 0
-    ) {
-      const offer = response.data.offers[0];
+    // The V2 Tariffs API typically returns an 'options' or 'tariffs' array
+    const tariffOptions = response.data.options || response.data.tariffs;
+
+    if (tariffOptions && tariffOptions.length > 0) {
+      const offer = tariffOptions[0];
       return {
-        price:
-          parseFloat(offer.price_total) || calculatePriceByDistance(distance),
-        estimatedTime: offer.eta || "2-5 business days",
-        distance: Math.round(distance * 10) / 10,
+        price: parseFloat(offer.price) || calculatePriceByDistance(distance),
+        estimatedTime: response.data.eta
+          ? `${Math.ceil(response.data.eta / 60)} hours`
+          : estimateDeliveryTime(distance),
+        distance: response.data.distance_meters
+          ? Math.round((response.data.distance_meters / 1000) * 10) / 10
+          : Math.round(distance * 10) / 10,
         serviceType: offer.taxi_class || "express",
-        offerId: offer.offer_id,
       };
     }
 
