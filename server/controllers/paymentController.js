@@ -486,10 +486,21 @@ const verifyPayment = async (req, res) => {
                     order,
                     order.user,
                   );
+
+                  const customerName = order.user
+                    ? `${order.user.firstName} ${order.user.lastName}`.trim()
+                    : order.shippingAddress?.firstName
+                      ? `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}`.trim()
+                      : "Customer";
+
                   await sendEmail(
                     process.env.ADMIN_EMAIL || "diamondauragallery@gmail.com",
                     adminTemplate.subject,
                     adminTemplate.html,
+                    {
+                      replyTo: recipientEmail,
+                      from: `"${customerName}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+                    },
                   );
                 } catch (emailError) {
                   logger.error("Error sending payment confirmation emails", {

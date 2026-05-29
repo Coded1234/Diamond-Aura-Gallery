@@ -199,7 +199,11 @@ const submitContact = async (req, res) => {
             ${formattedMessage}
           </div>
         `,
-        attachments.length > 0 ? { attachments } : undefined,
+        {
+          replyTo: email,
+          from: `"${name}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+          ...(attachments.length > 0 ? { attachments } : {}),
+        },
       );
     } catch (emailError) {
       logger.error("Admin notification email failed", {

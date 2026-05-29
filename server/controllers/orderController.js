@@ -422,10 +422,20 @@ const cancelOrder = async (req, res) => {
         req.user,
         reason,
       );
+
+      const customerName = req.user
+        ? `${req.user.firstName} ${req.user.lastName}`.trim()
+        : "Customer";
+
       await sendEmail(
         process.env.ADMIN_EMAIL || "diamondauragallery@gmail.com",
         adminTemplate.subject,
         adminTemplate.html,
+        {
+          replyTo:
+            req.user?.email || order.shippingAddress?.email || order.guestEmail,
+          from: `"${customerName}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+        },
       );
     } catch (emailError) {
       logger.error("Error sending cancellation email to admin", {
