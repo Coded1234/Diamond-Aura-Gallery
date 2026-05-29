@@ -430,16 +430,9 @@ async function getYangoShippingRate(origin, destination, deliveryInfo) {
       response.data.offers.length > 0
     ) {
       const offer = response.data.offers[0];
-      let finalPrice =
-        parseFloat(offer.price_total) || calculatePriceByDistance(distance);
-
-      // TEMPORARY PROMOTION/TESTING: Free shipping for distances under 5km (overrides API)
-      if (distance < 5) {
-        finalPrice = 0;
-      }
-
       return {
-        price: finalPrice,
+        price:
+          parseFloat(offer.price_total) || calculatePriceByDistance(distance),
         estimatedTime: offer.eta || "2-5 business days",
         distance: Math.round(distance * 10) / 10,
         serviceType: offer.taxi_class || "express",
@@ -538,11 +531,6 @@ function calculatePriceByDistance(distanceKm) {
   const distance = Number(distanceKm);
   if (!Number.isFinite(distance) || distance < 0) {
     return 5;
-  }
-
-  // TEMPORARY PROMOTION/TESTING: Free shipping for distances under 5km
-  if (distance < 5) {
-    return 0;
   }
 
   // Best-fit model from sampled website-vs-Yango routes:
